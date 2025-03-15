@@ -73,7 +73,6 @@ func main() {
 }
 
 func setHandlers(targetLogFile string, watcher *LogWatcher) {
-	// Set up HTTP handlers
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		serveHomePage(w, r, targetLogFile)
 	})
@@ -83,6 +82,7 @@ func setHandlers(targetLogFile string, watcher *LogWatcher) {
 	http.HandleFunc("/content", func(w http.ResponseWriter, r *http.Request) {
 		serveInitialContent(w, r, targetLogFile)
 	})
+	// keep in mind this is relative to the binary location--so if you run from a different directory, it will not work
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 }
 
@@ -95,11 +95,11 @@ func NewLogWatcher(filename string) *LogWatcher {
 	}
 }
 
-// Watch monitors the log file for changes
+// monitor the log file for changes
 func (w *LogWatcher) Watch() {
 	for {
 		w.checkForChanges()
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(300 * time.Millisecond)
 	}
 }
 

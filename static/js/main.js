@@ -32,8 +32,12 @@ fetch("/content")
     logContainer.scrollTop = logContainer.scrollHeight;
   });
 
-// Connect to SSE endpoint
 const evtSource = new EventSource("/logs");
+
+evtSource.onopen = function () {
+  console.info("SSE connection established");
+};
+
 evtSource.onmessage = function (event) {
   const newLine = event.data;
   const newElement = document.createElement("div");
@@ -50,5 +54,5 @@ evtSource.onmessage = function (event) {
 };
 
 evtSource.onerror = function () {
-  console.log("SSE connection error. Reconnecting...");
+  console.error("SSE connection error. Reconnecting...");
 };
