@@ -111,7 +111,35 @@ func (w *LogWatcher) checkForChanges() {
 	file, err := os.Open(w.filename)
 	if err != nil {
 		log.Printf("Error opening file: %v", err)
-		return
+
+		// If the file doesn't exist, try to find the most recent log file in the same directory
+		if os.IsNotExist(err) {
+			dirPath := filepath.Dir(w.filename)
+			log.Printf("Log file no longer exists. Checking directory %s for most recent log file", dirPath)
+
+			newFile, err := findMostRecentLogFile(dirPath)
+			if err != nil {
+				log.Printf("Failed to find new log file: %v", err)
+				return
+			}
+
+			if newFile != w.filename {
+				log.Printf("Switching to new log file: %s", newFile)
+				w.filename = newFile
+				w.lastPosition = 0 // Start reading from the beginning of the new file
+
+				// Try to open the new file
+				file, err = os.Open(w.filename)
+				if err != nil {
+					log.Printf("Error opening new file %s: %v", file.Name(), err)
+					return
+				}
+			} else {
+				return // No new file found
+			}
+		} else {
+			return // other error occurred
+		}
 	}
 	defer file.Close()
 
