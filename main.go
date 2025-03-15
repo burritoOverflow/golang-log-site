@@ -114,28 +114,11 @@ func (w *LogWatcher) checkForChanges() {
 
 		// If the file doesn't exist, try to find the most recent log file in the same directory
 		if os.IsNotExist(err) {
-			dirPath := filepath.Dir(w.filename)
-			log.Printf("Log file no longer exists. Checking directory %s for most recent log file", dirPath)
-
-			newFile, err := findMostRecentLogFile(dirPath)
-			if err != nil {
-				log.Printf("Failed to find new log file: %v", err)
+			// give up if we can't read a new file
+			var shouldReturn bool
+			file, shouldReturn = w.trySwitchNewFile()
+			if shouldReturn {
 				return
-			}
-
-			if newFile != w.filename {
-				log.Printf("Switching to new log file: %s", newFile)
-				w.filename = newFile
-				w.lastPosition = 0 // Start reading from the beginning of the new file
-
-				// Try to open the new file
-				file, err = os.Open(w.filename)
-				if err != nil {
-					log.Printf("Error opening new file %s: %v", file.Name(), err)
-					return
-				}
-			} else {
-				return // No new file found
 			}
 		} else {
 			return // other error occurred
@@ -157,7 +140,7 @@ func (w *LogWatcher) checkForChanges() {
 		w.lastPosition = 0
 	}
 
-	// If there's new content
+	// If there's new content, (file has grown since we've last seen it)
 	if size > w.lastPosition {
 		// Seek to where we left off
 		if _, err := file.Seek(w.lastPosition, io.SeekStart); err != nil {
@@ -184,6 +167,39 @@ func (w *LogWatcher) checkForChanges() {
 		if len(newLines) > 0 {
 			w.notifyClients(newLines)
 		}
+	}
+}
+
+// attempt to switch to a new log file if the current one no longer exists
+// searches the directory for the most recent log file
+// returns the new file and a boolean indicating if the function should return
+func (w *LogWatcher) trySwitchNewFile() (*os.File, bool) {
+	dirPath := filepath.Dir(w.filename)
+	log.Printf("Log file no longer exists. Checking directory %s for most recent log file", dirPath)
+
+	newFile, err := findMostRecentLogFile(dirPath)
+	if err != nil {
+		log.Printf("Failed to find new log file: %v", err)
+		return nil, true
+	}
+
+	if newFile != w.filename {
+		log.Printf("Switching to new log file: %s", newFile)
+		w.filename = newFile
+		// Start reading from the beginning of the new file
+		w.lastPosition = 0
+
+		// Try to open the new file
+		file, err := os.Open(w.filename)
+		if err != nil {
+			log.Printf("Error opening new file %s: %v", file.Name(), err)
+			return nil, true
+		}
+
+		return file, false
+	} else {
+		// No new file found
+		return nil, true
 	}
 }
 
