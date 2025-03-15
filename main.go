@@ -16,10 +16,10 @@ import (
 	"time"
 )
 
-// LogWatcher watches a log file and notifies when changes occur
+// LogWatcher watches a log file and notifies when changes to that file occur
 type LogWatcher struct {
 	filename     string
-	lastPosition int64
+	lastPosition int64 // Last position read in the file
 	mutex        sync.Mutex
 	clients      map[chan string]bool
 	clientsMutex sync.Mutex
@@ -216,6 +216,7 @@ func (w *LogWatcher) ServeHTTP(writer http.ResponseWriter, request *http.Request
 		}
 	}
 }
+
 func serveHomePage(w http.ResponseWriter, _ *http.Request, filename string) {
 	currentTime := time.Now().Format("January 2, 2006 at 3:04:05 PM MST")
 	data := struct {
