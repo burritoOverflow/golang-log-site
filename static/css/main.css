@@ -1,0 +1,51 @@
+body {
+  font-family: monospace;
+  background-color: #1e1e1e;
+  color: #dcdcdc;
+  margin: 0;
+  padding: 0 3% 0 3%;
+}
+
+h1 {
+  color: #569cd6;
+}
+
+#log-container {
+  background-color: #252526;
+  border-radius: 15px;
+  border: 1px solid #3c3c3c;
+  height: 80vh;
+  overflow-y: auto;
+  padding: 15px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.info {
+  color: #9cdcfe;
+}
+
+.error {
+  color: #f44747;
+}
+
+.warning {
+  color: #dcdcaa;
+}
+
+.debug {
+  color: #6a9955;
+}
+
+.header {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 90%;
+  margin-bottom: 20px;
+}
+
+.timestamp {
+  color: #888;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
