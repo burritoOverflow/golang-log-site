@@ -6,8 +6,15 @@ body {
   padding: 0 3% 0 3%;
 }
 
-h1 {
+.header > h1 {
   color: #569cd6;
+}
+
+.filename,
+.timestamp {
+  margin: 5px 0;
+  font-size: 0.9rem;
+  word-break: break-all;
 }
 
 #log-container {
@@ -17,8 +24,18 @@ h1 {
   height: 80vh;
   overflow-y: auto;
   padding: 15px;
+  scrollbar-width: none;
   white-space: pre-wrap;
   word-wrap: break-word;
+}
+
+#log-container::-webkit-scrollbar {
+  display: none;
+}
+
+.log-line {
+  /* breathing room on top and bottom */
+  padding: 3px 0;
 }
 
 .info {
@@ -48,4 +65,19 @@ h1 {
   color: #888;
   font-size: 0.9em;
   margin-top: 5px;
+}
+
+@media (max-width: 600px) {
+  .header h1 {
+    font-size: 1.2rem;
+  }
+
+  .filename,
+  .timestamp {
+    font-size: 0.8rem;
+  }
+
+  #log-container {
+    font-size: 0.8rem;
+  }
 }

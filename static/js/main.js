@@ -1,34 +1,38 @@
 const logContainer = document.getElementById("log-container");
 
 function colorizeLog(line) {
+  const div = document.createElement("div");
+  div.textContent = line;
+  div.classList.add("log-line");
+
   if (
     line.includes("ERROR") ||
     line.includes("CRITICAL") ||
     line.includes("FATAL")
   ) {
-    return '<div class="error">' + line + "</div>";
+    div.classList.add("error");
   } else if (line.includes("WARN") || line.includes("WARNING")) {
-    return '<div class="warning">' + line + "</div>";
+    div.classList.add("warning");
   } else if (line.includes("INFO")) {
-    return '<div class="info">' + line + "</div>";
+    div.classList.add("info");
   } else if (line.includes("DEBUG")) {
-    return '<div class="debug">' + line + "</div>";
+    div.classList.add("debug");
   }
-  return "<div>" + line + "</div>";
+
+  return div;
 }
 
-// Load initial content
 fetch("/content")
   .then((response) => response.text())
   .then((data) => {
     const lines = data.split("\n");
-    let html = "";
+    logContainer.innerHTML = "";
+
     for (const line of lines) {
       if (line.trim()) {
-        html += colorizeLog(line);
+        logContainer.appendChild(colorizeLog(line));
       }
     }
-    logContainer.innerHTML = html;
     logContainer.scrollTop = logContainer.scrollHeight;
   });
 
@@ -40,14 +44,13 @@ evtSource.onopen = function () {
 
 evtSource.onmessage = function (event) {
   const newLine = event.data;
-  const newElement = document.createElement("div");
-  newElement.innerHTML = colorizeLog(newLine);
-  logContainer.appendChild(newElement);
+  logContainer.appendChild(colorizeLog(newLine));
 
   // Auto-scroll to bottom if already at bottom
   const isScrolledToBottom =
     logContainer.scrollHeight - logContainer.clientHeight <=
     logContainer.scrollTop + 100;
+
   if (isScrolledToBottom) {
     logContainer.scrollTop = logContainer.scrollHeight;
   }

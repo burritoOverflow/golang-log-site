@@ -2,13 +2,13 @@
 <html>
   <head>
     <title>Log File Viewer - {{.Filename}}</title>
-    ,
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/static/css/main.css" />
   </head>
   <body>
     <section class="header">
-      <h1 class>Log File Viewer</h1>
-      <p>Monitoring file: <code>{{.Filename}}</code></p>
+      <h1>Log File Viewer</h1>
+      <p class="filename">Monitoring file: <code>{{.Filename}}</code></p>
       <p class="timestamp">Monitoring start time: {{.CurrentTime}}</p>
     </section>
     <div id="log-container"></div>
