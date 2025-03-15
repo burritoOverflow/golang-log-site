@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"embed"
 	"flag"
 	"fmt"
 	"html/template"
@@ -15,6 +16,10 @@ import (
 	"sync"
 	"time"
 )
+
+//go:embed templates/*.html
+var templatesFS embed.FS
+var indexTemplate = template.Must(template.ParseFS(templatesFS, "templates/index.html"))
 
 // LogWatcher watches a log file and notifies when changes to that file occur
 type LogWatcher struct {
@@ -227,14 +232,7 @@ func serveHomePage(w http.ResponseWriter, _ *http.Request, filename string) {
 		CurrentTime: currentTime,
 	}
 
-	tmpl, err := template.ParseFiles("templates/index.html")
-	if err != nil {
-		log.Printf("Error parsing template: %v", err)
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		return
-	}
-
-	if err := tmpl.Execute(w, data); err != nil {
+	if err := indexTemplate.Execute(w, data); err != nil {
 		log.Printf("Error executing template: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
