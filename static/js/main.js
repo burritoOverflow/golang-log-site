@@ -36,26 +36,81 @@ fetch("/content")
     logContainer.scrollTop = logContainer.scrollHeight;
   });
 
-const evtSource = new EventSource("/logs");
+let eventSource = null;
+let reconnectTimeout = 1000; // Start with 1 second; adjust via exponential backoff
+const maxReconnectTimeout = 30000; // Maximum 30 seconds
+let reconnectAttempts = 0;
+const maxReconnectAttempts = 10;
 
-evtSource.onopen = function () {
-  console.info("SSE connection established");
-};
-
-evtSource.onmessage = function (event) {
-  const newLine = event.data;
-  logContainer.appendChild(colorizeLog(newLine));
-
-  // Auto-scroll to bottom if already at bottom
-  const isScrolledToBottom =
-    logContainer.scrollHeight - logContainer.clientHeight <=
-    logContainer.scrollTop + 100;
-
-  if (isScrolledToBottom) {
-    logContainer.scrollTop = logContainer.scrollHeight;
+function connectEventSource() {
+  if (eventSource) {
+    eventSource.close();
   }
-};
 
-evtSource.onerror = function () {
-  console.error("SSE connection error. Reconnecting...");
-};
+  eventSource = new EventSource("/logs");
+
+  eventSource.onopen = function () {
+    console.info("SSE connection established");
+    // Reset reconnection timeout on successful connection
+    reconnectTimeout = 1000;
+    reconnectAttempts = 0;
+  };
+
+  eventSource.onmessage = function (event) {
+    const newLine = event.data;
+    logContainer.appendChild(colorizeLog(newLine));
+
+    // Auto-scroll to bottom if already at bottom
+    const isScrolledToBottom =
+      logContainer.scrollHeight - logContainer.clientHeight <=
+      logContainer.scrollTop + 100;
+
+    if (isScrolledToBottom) {
+      logContainer.scrollTop = logContainer.scrollHeight;
+    }
+  };
+
+  eventSource.onerror = function () {
+    console.error("SSE connection error. Reconnecting...");
+    eventSource.close();
+
+    reconnectAttempts++;
+    if (reconnectAttempts <= maxReconnectAttempts) {
+      console.info(
+        `Reconnection attempt ${reconnectAttempts} in ${
+          reconnectTimeout / 1000
+        } seconds...`
+      );
+
+      setTimeout(() => {
+        connectEventSource();
+        // Implement exponential backoff for reconnection
+        reconnectTimeout = Math.min(reconnectTimeout * 2, maxReconnectTimeout);
+      }, reconnectTimeout);
+    } else {
+      console.error(
+        `Failed to reconnect after ${maxReconnectAttempts} attempts. Please refresh the page.`
+      );
+
+      const errorDiv = document.createElement("div");
+      errorDiv.classList.add("connection-error");
+      errorDiv.textContent = "Connection lost. Please refresh the page.";
+      logContainer.prepend(errorDiv);
+    }
+  };
+}
+
+// init
+connectEventSource();
+
+document.addEventListener("visibilitychange", () => {
+  if (
+    document.visibilityState === "visible" &&
+    (!eventSource || eventSource.readyState === EventSource.CLOSED)
+  ) {
+    console.info("Page became visible again, reconnecting SSE...");
+    reconnectAttempts = 0; // Reset reconnect attempts
+    reconnectTimeout = 1000; // Reset timeout
+    connectEventSource();
+  }
+});

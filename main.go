@@ -196,6 +196,7 @@ func (w *LogWatcher) trySwitchNewFile() (*os.File, bool) {
 			return nil, true
 		}
 
+		// Return the new file if we're successful
 		return file, false
 	} else {
 		// No new file found
