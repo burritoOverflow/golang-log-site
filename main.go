@@ -38,6 +38,10 @@ func main() {
 
 	log.SetFlags(log.LstdFlags | log.Lshortfile | log.Lmsgprefix | log.Lmicroseconds)
 
+	if *logFilePath == "" && *logDirPath == "" {
+		log.Fatal("Either -file or -dir must be specified")
+	}
+
 	if *logFilePath != "" && *logDirPath != "" {
 		log.Fatal("Only one of -file or -dir can be specified")
 	}
